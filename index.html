@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DISDIKPORA | Sistem Informasi Geografis (SIG)</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;400i;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
+
+    <style>
+        body { font-family: 'Source Sans Pro', sans-serif; background-color: #f4f6f9; overflow: hidden; }
+        .main-sidebar { background-color: #343a40; width: 250px; transition: all 0.3s ease; flex-shrink: 0; z-index: 1001; display: flex; flex-direction: column; }
+        
+        #map { height: calc(100vh - 64px); width: 100%; }
+        
+        .sidebar-content { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #4b545c transparent; }
+        .sidebar-content::-webkit-scrollbar { width: 5px; }
+        .sidebar-content::-webkit-scrollbar-thumb { background: #4b545c; }
+        
+        .nav-header { padding: 0.75rem 1rem 0.25rem; font-size: 0.7rem; color: #6c757d; text-transform: uppercase; font-weight: 800; border-top: 1px solid #4b545c; margin-top: 5px; }
+        .nav-link { display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; color: #c2c7d0; font-size: 13px; transition: all 0.2s; border-radius: 4px; margin: 2px 8px; cursor: pointer; }
+        .nav-link:hover { background-color: rgba(255,255,255,0.1); color: #fff; }
+        
+        .nav-treeview { display: none; background: rgba(0,0,0,0.2); padding-left: 5px; padding-bottom: 5px; }
+        .nav-treeview.open { display: block; }
+        .nav-icon { font-size: 18px !important; margin-right: 10px; }
+        .arrow-icon { font-size: 16px !important; transition: transform 0.3s; }
+        .rotate-arrow { transform: rotate(-90deg); }
+
+        .badge-status { font-size: 9px; padding: 2px 6px; border-radius: 10px; font-weight: bold; margin-left: 5px; }
+        .bg-negeri { background-color: #28a745; color: white; }
+        .bg-swasta { background-color: #ffc107; color: #343a40; }
+
+        .leaflet-popup-content-wrapper { border-top: 4px solid #007bff; border-radius: 8px; padding: 0; overflow: hidden; }
+        .leaflet-popup-content { margin: 0 !important; width: 280px !important; }
+        .btn-lte { background: #050A30; color: white !important; font-size: 9px; padding: 8px 2px; border-radius: 4px; flex: 1; text-align: center; text-decoration: none; font-weight: 700; transition: opacity 0.2s; display: inline-block; }
+        .btn-lte:hover { opacity: 0.9; }
+
+        .sidebar-collapsed .main-sidebar { margin-left: -250px; }
+        .splide__slide img { width: 100%; height: 160px; object-fit: cover; display: block; }
+        .splide__arrow { background: rgba(0,0,0,0.5) !important; fill: #fff !important; width: 2em !important; height: 2em !important; }
+        .splide__pagination__page.is-active { background: #007bff !important; }
+        
+        .sidebar-footer { background: #2c3136; padding: 15px; border-top: 1px solid #4b545c; color: #8e99a2; font-size: 11px; text-align: center; }
+        select:focus { background-color: #56606a !important; }
+    </style>
+</head>
+<body class="hold-transition sidebar-mini">
+
+<div class="flex h-screen w-full" id="wrapper">
+    <aside class="main-sidebar h-full shadow-xl">
+        <div class="flex flex-col items-center justify-center py-5 border-b border-gray-700 bg-[#343a40] sticky top-0 z-10">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/9/9c/Logo_of_Ministry_of_Education_and_Culture_of_Republic_of_Indonesia.svg" 
+                 alt="Logo Tut Wuri" class="h-12 w-auto mb-2">
+            <span class="text-white font-bold text-sm tracking-wider">
+                DATA PENDIDIKAN <span class="font-light text-blue-400"></span>
+            </span>
+            <div class="text-[10px] text-green-400 mt-1 flex items-center gap-1 uppercase font-bold tracking-tighter">
+                <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span> DINAS PENDIDIKAN PEMUDA DAN OLAHRAGA
+            </div>
+        </div>
+
+        <div class="sidebar-content mt-4">
+            <div class="px-4 mb-4 space-y-3">
+                <div>
+                    <label class="nav-header p-0 mb-1 block border-none">Filter Sekolah</label>
+                    <select id="filter-status" class="w-full bg-[#4b545c] text-white text-[11px] rounded p-2 outline-none cursor-pointer mb-2">
+                        <option value="ALL">SEMUA STATUS</option>
+                        <option value="NEGERI">NEGERI</option>
+                        <option value="SWASTA">SWASTA</option>
+                    </select>
+                    <select id="filter-jenjang" class="w-full bg-[#4b545c] text-white text-[11px] rounded p-2 outline-none cursor-pointer mb-2">
+                        <option value="ALL">SEMUA JENJANG</option>
+                        <option value="TK">TK / PAUD</option>
+                        <option value="SD">SD</option>
+                        <option value="SMP">SMP</option>
+                    </select>
+                    <select id="filter-kecamatan" class="w-full bg-[#4b545c] text-white text-[11px] rounded p-2 outline-none cursor-pointer">
+                        <option value="ALL">SEMUA KECAMATAN</option>
+                    </select>
+                </div>
+            </div>
+
+            <nav class="pb-10">
+                <div class="nav-header">Referensi Data </div>
+                <div class="nav-item">
+                    <div class="nav-link" onclick="toggleSubMenu(this)">
+                        <div class="flex items-center"><span class="material-icons nav-icon text-blue-400">badge</span><span>KEPEGAWAIAN</span></div>
+                        <span class="material-icons arrow-icon">chevron_left</span>
+                    </div>
+                    <div class="nav-treeview">
+                        <a href="#" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> DATA GURU ASN</a>
+                        <a href="#" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> DATA GURU NON ASN</a>                        
+                    </div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-link" onclick="toggleSubMenu(this)">
+                        <div class="flex items-center"><span class="material-icons nav-icon text-blue-400">badge</span><span>MANAJEMEN ASET SEKOLAH</span></div>
+                        <span class="material-icons arrow-icon">chevron_left</span>
+                    </div>
+                    <div class="nav-treeview">
+                        <a href="https://donggala.e-bmd.co.id/" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> E-BMD DONGGALA</a>
+                        <a href="#" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> KERTAS KERJA ASET</a>
+                        <a href="#" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> INVENTARISASI ASET SEKOLAH</a>
+                    </div>
+                </div>
+              
+                <div class="nav-header">RUANG BELAJAR</div>
+                <div class="nav-item">
+                    <div class="nav-link" onclick="toggleSubMenu(this)">
+                        <div class="flex items-center"><span class="material-icons nav-icon text-orange-400">child_care</span><span>RUMAH PENDIDIKAN</span></div>
+                        <span class="material-icons arrow-icon">chevron_left</span>
+                    </div>
+                    <div class="nav-treeview">
+                        <a href="https://rumah.pendidikan.go.id/ruang/sekolah" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> RUANG SEKOLAH</a>
+                        <a href="https://rumah.pendidikan.go.id/ruang/gtk" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> RUANG GTK</a>
+                        <a href="https://rumah.pendidikan.go.id/ruang/murid" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> RUANG MURID</a>
+                        <a href="https://cerdasberkarakter.kemendikdasmen.go.id/ruang-orangtua/" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> RUANG ORANG TUA</a>
+                        <a href="https://rumah.pendidikan.go.id/ruang/bahasa" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> RUANG BAHASA</a>
+                        <a href="#" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> RUANG BACA</a>
+                    </div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-link" onclick="toggleSubMenu(this)">
+                        <div class="flex items-center"><span class="material-icons nav-icon text-red-500">account_balance</span><span>DASHBOARD DATA PENDIDIKAN</span></div>
+                        <span class="material-icons arrow-icon">chevron_left</span>
+                    </div>
+                    <div class="nav-treeview">
+                        <a href="https://data.kemendikdasmen.go.id/publikasi/p/rapor-pendidikan-indonesia/rapor-pendidikan-indonesia-kab-donggala-2024" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> RAPOR PENDIDIKAN 2024</a>
+                        <a href="https://data.kemendikdasmen.go.id/publikasi/p/rapor-pendidikan-indonesia/rapor-pendidikan-indonesia-2025-kabupaten-donggala" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> RAPOR PENDIDIKAN 2025</a>
+                        <a href="https://npd.kemendikdasmen.go.id/grafik?tahun=2024&wilayah=180200" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> NERACA PENDIDIKAN</a>                        
+                    </div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-link" onclick="toggleSubMenu(this)">
+                        <div class="flex items-center"><span class="material-icons nav-icon text-blue-500">school</span><span>INFORMASI DISDIKPORA</span></div>
+                        <span class="material-icons arrow-icon">chevron_left</span>
+                    </div>
+                    <div class="nav-treeview">
+                        <a href="https://s.id/data_gtk_dgl" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> DATA GTK DONGGALA</a>
+                        <a href="https://info.gtk.kemendikdasmen.go.id/" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> CEK INFO GTK</a>
+                    </div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-link" onclick="toggleSubMenu(this)">
+                        <div class="flex items-center"><span class="material-icons nav-icon text-blue-500">school</span><span>KOMUNITAS BELAJAR</span></div>
+                        <span class="material-icons arrow-icon">chevron_left</span>
+                    </div>
+                    <div class="nav-treeview">
+                        <a href="#" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> KOMUNITAS BELAJAR TK-PAUD</a>
+                        <a href="#" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> KOMUNITAS BELAJAR SD</a>
+                        <a href="#" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> KOMUNITAS BELAJAR SMP</a>
+                    </div>
+                </div>
+                <div class="nav-header">Presensi</div>
+                <div class="nav-item">
+                    <div class="nav-link" onclick="toggleSubMenu(this)">
+                        <div class="flex items-center"><span class="material-icons nav-icon text-orange-400">child_care</span><span>KEGIATAN KOMBEL</span></div>
+                        <span class="material-icons arrow-icon">chevron_left</span>
+                    </div>
+                    <div class="nav-treeview">
+                        <a href="#" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> Jenjang TK</a>
+                        <a href="#" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> Jenjang SD</a>
+                        <a href="https://tondatalusi-rgb.github.io/presensi_kombel/" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> Jenjang SMP</a>
+                        <a href="#" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> Rekap Jenjang TK</a>
+                        <a href="#" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> Rekap Jenjang SD</a>
+                        <a href="https://tondatalusi-rgb.github.io/presensi_kombel/monitoring.html" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> Rekap Jenjang SMP</a>
+                    </div>
+                </div>
+                <div class="nav-header">LMS - E-Learning</div>
+                <div class="nav-item">
+                    <div class="nav-link" onclick="toggleSubMenu(this)">
+                        <div class="flex items-center"><span class="material-icons nav-icon text-orange-400">child_care</span><span>BELAJAR DARING</span></div>
+                        <span class="material-icons arrow-icon">chevron_left</span>
+                    </div>
+                    <div class="nav-treeview">
+                        <a href="#" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> Jenjang TK</a>
+                        <a href="#" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> Jenjang SD</a>
+                        <a href="https://tondatalusi-rgb.github.io/E-Learning/" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> Jenjang SMP</a>
+                        <a href="#" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> Monev Kegiatan Siswa TK</a>
+                        <a href="#" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> Monev Kegiatan Siswa SD</a>
+                        <a href="https://tondatalusi-rgb.github.io/presensi_kombel/monitoring.html" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> Monev Kegiatan Siswa SMP</a>
+                    </div>
+                </div>
+
+                <div class="nav-header">REFERENSI DATA</div>
+                <div class="nav-item">
+                    <div class="nav-link" onclick="toggleSubMenu(this)">
+                        <div class="flex items-center"><span class="material-icons nav-icon text-green-400">payments</span><span>MANAJEMEN BOS</span></div>
+                        <span class="material-icons arrow-icon">chevron_left</span>
+                    </div>
+                    <div class="nav-treeview">
+                        <a href="https://markas.kemendikdasmen.go.id/login" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> Login Markas</a>
+                        <a href="https://bosp.kemendikdasmen.go.id/rekap/penyaluran_provinsi/180000?tahun=2026&tahap=1&jenis_bos=reguler/" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> Laporan Salur BOS</a>
+                        <a href="https://siplah.kemendikdasmen.go.id/satuan-pendidikan" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> SIPLAH</a>
+                        <a href="https://script.google.com/macros/s/AKfycbzgV7A5NO6zYv1zjDMkmhgpJLN_2kIMcuNC02X61aeBXPWMtrbK8hLXqMsiYCFhGUMtyg/exec" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> Kertas Kerja Aset BOS</a>
+                    </div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-link" onclick="toggleSubMenu(this)">
+                        <div class="flex items-center"><span class="material-icons nav-icon text-yellow-500">analytics</span><span>DAPODIK</span></div>
+                        <span class="material-icons arrow-icon">chevron_left</span>
+                    </div>
+                    <div class="nav-treeview">
+                        <a href="https://dapo.kemendikdasmen.go.id/progres-paud/2/180200?view=tk" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> Progres Dapodik TK</a>
+                        <a href="https://https://dapo.kemendikdasmen.go.id/progres-sd/2/180200" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> Progres Dapodik SD</a>
+                        <a href="https://dapo.kemendikdasmen.go.id/progres-smp/2/180200" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> Progres Dapodik SMP</a>
+                        <a href="https://dapo.kemendikdasmen.go.id/unduhan" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> Unduh Aplikasi DAPODIK</a>
+                        <a href="https://ptk.datadik.kemendikdasmen.go.id/" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> PTK Datadik</a>
+                    </div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-link" onclick="toggleSubMenu(this)">
+                        <div class="flex items-center"><span class="material-icons nav-icon text-yellow-500">analytics</span><span>VERVAL DATA</span></div>
+                        <span class="material-icons arrow-icon">chevron_left</span>
+                    </div>
+                    <div class="nav-treeview">
+                        <a href="https://sso.data.kemendikdasmen.go.id/sys/login?appkey=D89692DC-6E26-4DAD-A174-A11B54DEC0BB" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> VERVAL SP</a>
+                        <a href="https://sso.data.kemendikdasmen.go.id/sys/login?appkey=348310F2-0262-4F5D-B7D1-41F92ECDCA93" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> VERVAL PD</a>
+                        <a href="https://sso.data.kemendikdasmen.go.id/sys/login?appkey=348310F2-0262-4F5D-B7D1-41F92ECDCA93" target="_blank" class="nav-link text-[11px] opacity-80"><span class="material-icons text-[12px]">circle</span> VERVAL PTK</a>                        
+                    </div>
+                </div>
+            </nav>
+        </div>
+        
+
+        <footer class="sidebar-footer">
+            <p class="font-bold text-gray-300">© 2026 DISDIKPORA</p>
+            <p>Kabupaten Donggala</p>
+            <p>Komunitas Belajar</p>
+            <p>TONDA TALUSI - SOU BATIK</p>
+            <div class="flex justify-center gap-3 mt-2">
+                <span class="material-icons text-[16px] hover:text-white cursor-pointer">facebook</span>
+                <span class="material-icons text-[16px] hover:text-white cursor-pointer">language</span>
+                <span class="material-icons text-[16px] hover:text-white cursor-pointer">email</span>
+            </div>
+        </footer>
+    </aside>
+
+    <main class="flex-grow flex flex-col h-full relative">
+        <header class="h-16 bg-white border-b flex items-center justify-between px-4 z-[1000] shadow-sm">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="text-gray-600 hover:text-blue-600 transition">
+                    <span class="material-icons">menu</span>
+                </button>
+                
+                <div class="flex items-center gap-3">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e5/Lambang_Kabupaten_Donggala_%282015-sekarang%29.png" 
+                         alt="Logo Donggala" class="h-10 w-auto">
+                    <div class="flex flex-col justify-center">
+                        
+                        <p class="text-[9px] md:text-[11px] font-bold text-blue-600 leading-tight uppercase mt-0.5">
+                            DINAS PENDIDIKAN PEMUDA DAN OLAHRAGA
+                        </p>
+                        <p class="text-[9px] md:text-[11px] font-bold text-blue-600 leading-tight uppercase mt-0.5">
+                            DATA REFERENSI SATUAN PENDIDIKAN JENJANG TK,SD,SMP (NEGERI / SWASTA)
+                        </p>
+                        <h1 class="text-base md:text-sm font-black text-gray-800 leading-none tracking-tight uppercase">
+                            KABUPATEN DONGGALA
+                        </h1>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hidden sm:flex items-center bg-gray-50 px-3 py-1 rounded-full border border-gray-200">
+                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></span>
+                <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest">Sistem Informasi Geografis</span>
+            </div>
+        </header>
+
+        <div id="map"></div>
+    </main>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
+
+<script>    
+    // 1. Inisialisasi Peta & Basemaps
+    const gHybrid = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '© Google Hybrid' });
+    const gStreet = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '© Google Maps' });
+    const esriSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: '© Esri Satellite' });
+
+    const map = L.map('map', { zoomControl: false, layers: [gHybrid] }).setView([-0.88675, 119.64992], 7,8);
+
+    const baseMaps = { "Google Hybrid": gHybrid, "Google Maps": gStreet, "Esri Imagery": esriSat };
+    L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    // 2. Logika Expired 360 Hari
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    const EXPIRE_DAYS = 360;
+    const now = new Date().getTime();
+    const setupTime = localStorage.getItem('appSetupTime');
+
+    if (setupTime === null) {
+        localStorage.setItem('appSetupTime', now);
+    } else if (now - setupTime > (ONE_DAY_MS * EXPIRE_DAYS)) {
+        document.body.innerHTML = `<div class="flex items-center justify-center h-screen bg-gray-100 text-center"><div class="bg-white p-8 rounded-2xl shadow-xl border-t-8 border-red-500"><h1 class="text-2xl font-black">Akses Kedaluwarsa</h1><p class="mt-4">Masa berlaku 360 hari telah habis.</p></div></div>`;
+        throw new Error("Expired");
+    }
+
+    // 3. Fungsi UI
+    function toggleSidebar() {
+        document.getElementById('wrapper').classList.toggle('sidebar-collapsed');
+        setTimeout(() => map.invalidateSize(), 300);
+    }
+
+    function toggleSubMenu(elem) {
+        const treeview = elem.nextElementSibling;
+        const arrow = elem.querySelector('.arrow-icon');
+        treeview.classList.toggle('open');
+        arrow.classList.toggle('rotate-arrow');
+    }
+
+    // 4. Integrasi Data Google Sheets
+    const sheetId = '14423251f2UU80uFmMvtIyZ6gxjTeaFiL3Mrij_7u2mg';
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+
+    let allMarkers = [];
+    let schoolData = [];
+    let listKecamatan = new Set();
+
+    const createIcon = (color) => L.divIcon({
+        html: `<span class="material-icons" style="color: ${color}; font-size: 32px; text-shadow: 0 3px 6px rgba(0,0,0,0.3);">location_on</span>`,
+        className: 'bg-transparent border-none', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
+    });
+
+    const icons = { 'SD': createIcon('#EF4444'), 'SMP': createIcon('#007bff'), 'TK': createIcon('#28a745'), 'DEFAULT': createIcon('#6c757d') };
+
+    fetch(url).then(res => res.text()).then(csv => {
+        const rows = csv.split(/\r?\n/).slice(1); 
+        rows.forEach((row, i) => {
+            const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^\"$]*$)/).map(c => c.replace(/"/g, "").trim());
+            
+            if (cols[1] && cols[2]) {
+                const nama = (cols[0] || "").toUpperCase();
+                let jnj = "DEFAULT";
+                if (nama.includes("SD")) jnj = "SD";
+                else if (nama.includes("SMP")) jnj = "SMP";
+                else if (nama.includes("TK") || nama.includes("PAUD")) jnj = "TK";
+
+                const kec = (cols[3] || "DONGGALA").toUpperCase();
+                if(kec && kec !== "KECAMATAN") listKecamatan.add(kec);
+
+                // Hitung total siswa dari kolom 9 & 10 (Indeks 0)
+                const jmlSiswa = (parseInt(cols[9]) || 0) + (parseInt(cols[10]) || 0);
+
+                schoolData.push({
+    id: i, 
+    nama: cols[0], 
+    lat: parseFloat(cols[1]), 
+    long: parseFloat(cols[2]),
+    jenjang: jnj, 
+    fotoDrive: cols[4], 
+    npsn: cols[5], 
+    alamat: cols[6],
+    kecamatan: kec, 
+    kepsek: cols[8], 
+    operator: cols[15], // Menambahkan kolom Operator (Indeks 12)
+    Rombel: cols[12], // Menambahkan kolom Operator (Indeks 13)
+    Kurikulum: cols[16], // Menambahkan kolom Operator (Indeks 14)
+    status: (cols[14] || "SWASTA").toUpperCase(),
+    akreditasi: cols[13] || "-",
+    jmlGuru: cols[11] || "0",
+    jmlSiswa: jmlSiswa,
+    linkKemdikbud: cols[21] || "#",
+    linkWeb: cols[22] || "#"
+                });
+            }
+        });
+
+        const kecSelect = document.getElementById('filter-kecamatan');
+        Array.from(listKecamatan).sort().forEach(kec => {
+            const opt = document.createElement('option');
+            opt.value = kec; opt.innerHTML = kec;
+            kecSelect.appendChild(opt);
+        });
+        renderMap();
+    });
+
+    function renderMap() {
+        const fStatus = document.getElementById('filter-status').value; 
+        const fJenjang = document.getElementById('filter-jenjang').value;
+        const fKecamatan = document.getElementById('filter-kecamatan').value;
+
+        allMarkers.forEach(m => map.removeLayer(m));
+        allMarkers = [];
+        let bounds = [];
+
+        schoolData.forEach(d => {
+            if ((fStatus === 'ALL' || d.status === fStatus) && (fJenjang === 'ALL' || d.jenjang === fJenjang) && (fKecamatan === 'ALL' || d.kecamatan === fKecamatan)) {
+                
+                const photoLinks = d.fotoDrive ? d.fotoDrive.split(',') : [];
+let slidesHtml = photoLinks.map(link => {
+    let rawLink = link.trim();
+    let directLink = rawLink;
+
+    // Logika Konversi Google Drive
+    if (rawLink.includes('drive.google.com')) {
+        let fileId = "";
+        if (rawLink.includes('/d/')) {
+            fileId = rawLink.split('/d/')[1].split('/')[0];
+        } else if (rawLink.includes('id=')) {
+            fileId = rawLink.split('id=')[1].split('&')[0];
+        }
+        
+        if (fileId) {
+            // Menggunakan thumbnail berkualitas tinggi agar loading lebih ringan namun tajam
+            directLink = `https://lh3.googleusercontent.com/u/0/d/${fileId}=w800-h600-iv1`;
+        }
+    }
+
+    return `
+    <li class="splide__slide">
+        <a href="${directLink}" data-fancybox="gallery-${d.id}">
+            <img src="${directLink}" onerror="this.src='https://via.placeholder.com/280x160?text=Gambar+Privat/Error'">
+        </a>
+    </li>`;
+}).join('');
+                
+                if (!slidesHtml) slidesHtml = `<li class="splide__slide"><img src="https://via.placeholder.com/280x160?text=Tidak+Ada+Foto"></li>`;
+
+                const popupContent = `
+                <div>
+                    <div style="background:#343a40; color:white; padding:12px; border-bottom: 3px solid #007bff">
+                        <b style="font-size:12px; display:block; text-transform:uppercase">${d.nama} 
+                            <span class="badge-status ${d.status==='NEGERI'?'bg-negeri':'bg-swasta'}">${d.status}</span>
+                        </b>
+                        <div style="font-size:9px; margin-top:2px; opacity:0.8">KEC. ${d.kecamatan} | NPSN: ${d.npsn}</div>
+                    </div>
+                    <section id="slider-${d.id}" class="splide">
+                        <div class="splide__track"><ul class="splide__list">${slidesHtml}</ul></div>
+                    </section>
+                    <div style="padding:12px; font-size:11px;">
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-bottom:10px;">
+                            <div style="background:#f1f3f5; padding:6px; border-radius:4px; text-align:center; border:1px solid #dee2e6">
+                                <p style="font-size:8px; color:#6c757d; margin:0; font-weight:700">AKREDITASI</p>
+                                <b style="font-size:13px; color:#212529">${d.akreditasi}</b>
+                            </div>
+                            <div style="background:#f1f3f5; padding:6px; border-radius:4px; text-align:center; border:1px solid #dee2e6">
+                                <p style="font-size:8px; color:#6c757d; margin:0; font-weight:700">GURU / SISWA</p>
+                                <b style="font-size:13px; color:#212529">${d.jmlGuru} / ${d.jmlSiswa}</b>
+                            </div>
+                        </div>
+                        <p><strong>Kepsek:</strong> ${d.kepsek || '-'}</p>
+                        <p><strong>Operator:</strong> ${d.operator || '-'}</p> <p style="color:#666; margin-top:4px; line-height:1.2;">
+                        <p><strong>Rombel:</strong> ${d.Rombel || '-'}</p> <p style="color:#666; margin-top:4px; line-height:1.2;">
+                        <p><strong>Kurikulum:</strong> ${d.Kurikulum || '-'}</p> <p style="color:#666; margin-top:4px; line-height:1.2;">
+                        <p style="color:#666; margin-top:4px; line-height:1.2;">
+                            <span class="material-icons" style="font-size:11px; vertical-align:middle">place</span> ${d.alamat}
+                        </p>
+                        <div style="display:flex; gap:4px; margin-top:12px;">
+                            <a href="${d.linkKemdikbud}" target="_blank" class="btn-lte">DATA REFERENSI</a>
+                            <a href="https://guru.kemendikdasmen.go.id/" target="_blank" class="btn-lte">RUANG GURU</a> 
+                            <a href="${d.linkWeb}" target="_blank" class="btn-lte">WEB</a> 
+                        </div>
+                    </div>
+                </div>`;
+
+                const marker = L.marker([d.lat, d.long], { icon: icons[d.jenjang] || icons.DEFAULT }).addTo(map);
+                marker.bindPopup(popupContent, { maxWidth: 280, minWidth: 280 });
+                
+                marker.on('popupopen', () => {
+                    new Splide(`#slider-${d.id}`, { type: 'loop', autoplay: true, interval: 3000, arrows: true, pagination: true }).mount();
+                    Fancybox.bind(`[data-fancybox="gallery-${d.id}"]`, {});
+                });
+
+                allMarkers.push(marker);
+                bounds.push([d.lat, d.long]);
+            }
+        });
+
+        if (bounds.length > 0 && (fStatus !== 'ALL' || fJenjang !== 'ALL' || fKecamatan !== 'ALL')) {
+            map.flyToBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+        }
+    }
+
+    document.getElementById('filter-status').addEventListener('change', renderMap);
+    document.getElementById('filter-jenjang').addEventListener('change', renderMap);
+    document.getElementById('filter-kecamatan').addEventListener('change', renderMap);
+</script>
+</body>
+</html>
