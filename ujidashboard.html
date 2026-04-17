@@ -250,6 +250,39 @@
                     <section id="slider-${d.id}" class="splide">
                         <div class="splide__track"><ul class="splide__list">${slidesHtml}</ul></div>
                     </section>
+function createPopupContent(school) {
+    // Contoh data link dari Google Drive
+    const driveLinks = [
+        'https://drive.google.com/file/d/ID_FILE_GAMBAR_1/view?usp=sharing',
+        'https://drive.google.com/file/d/ID_FILE_GAMBAR_2/view?usp=sharing'
+    ];
+
+    // Konversi semua link Drive menjadi Direct Link
+    const slides = driveLinks.map(link => getGoogleDriveDirectLink(link));
+
+    let slidesHtml = '';
+    slides.forEach(src => {
+        slidesHtml += `
+            <li class="splide__slide">
+                <a href="${src}" data-fancybox="gallery-${school.id}">
+                    <img src="${src}" class="w-full h-48 object-cover rounded-lg" alt="Foto Sekolah">
+                </a>
+            </li>`;
+    });
+
+    // Kembalikan struktur HTML untuk pop-up Leaflet
+    return `
+        <div class="p-2">
+            <h3 class="font-bold text-lg border-b mb-2">${school.nama}</h3>
+            <div id="splide-${school.id}" class="splide">
+                <div class="splide__track">
+                    <ul class="splide__list">
+                        ${slidesHtml}
+                    </ul>
+                </div>
+            </div>
+        </div>`;
+}
                     <div style="padding:12px; font-size:11px;">
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-bottom:8px;">
                             <div style="background:#f1f3f5; padding:5px; border-radius:4px; text-align:center;">
@@ -289,6 +322,16 @@
                 bounds.push([d.lat, d.lng]);
             }
         });
+// Fungsi untuk mengubah link Google Drive menjadi direct link gambar
+function getGoogleDriveDirectLink(driveUrl) {
+    const regex = /\/d\/([a-zA-Z0-9_-]+)/;
+    const match = driveUrl.match(regex);
+    if (match && match[1]) {
+        // Menggunakan format uc?export=view agar gambar bisa dimuat langsung
+        return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+    }
+    return driveUrl; // Kembalikan URL asli jika format tidak cocok
+}
 
         // Update UI
         document.getElementById('st-total-sekolah').innerText = stats.total;
