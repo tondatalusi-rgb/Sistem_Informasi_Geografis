@@ -60,7 +60,7 @@
             <img src="https://upload.wikimedia.org/wikipedia/commons/9/9c/Logo_of_Ministry_of_Education_and_Culture_of_Republic_of_Indonesia.svg" 
                  alt="Logo Tut Wuri" class="h-12 w-auto mb-2">
             <span class="text-white font-bold text-sm tracking-wider">
-                DATA PENDIDIKAN <span class="font-light text-blue-400"></span>
+                DATA PENDIDIKAN
             </span>
             <div class="text-[10px] text-green-400 mt-1 flex items-center gap-1 uppercase font-bold tracking-tighter">
                 <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span> DINAS PENDIDIKAN PEMUDA DAN OLAHRAGA
@@ -236,11 +236,6 @@
             <p>Kabupaten Donggala</p>
             <p>Komunitas Belajar</p>
             <p>TONDA TALUSI - SOU BATIK</p>
-            <div class="flex justify-center gap-3 mt-2">
-                <span class="material-icons text-[16px] hover:text-white cursor-pointer">facebook</span>
-                <span class="material-icons text-[16px] hover:text-white cursor-pointer">language</span>
-                <span class="material-icons text-[16px] hover:text-white cursor-pointer">email</span>
-            </div>
         </footer>
     </aside>
 
@@ -250,17 +245,12 @@
                 <button onclick="toggleSidebar()" class="text-gray-600 hover:text-blue-600 transition">
                     <span class="material-icons">menu</span>
                 </button>
-                
                 <div class="flex items-center gap-3">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/e/e5/Lambang_Kabupaten_Donggala_%282015-sekarang%29.png" 
                          alt="Logo Donggala" class="h-10 w-auto">
                     <div class="flex flex-col justify-center">
-                        
                         <p class="text-[9px] md:text-[11px] font-bold text-blue-600 leading-tight uppercase mt-0.5">
                             DINAS PENDIDIKAN PEMUDA DAN OLAHRAGA
-                        </p>
-                        <p class="text-[9px] md:text-[11px] font-bold text-blue-600 leading-tight uppercase mt-0.5">
-                            DATA REFERENSI SATUAN PENDIDIKAN JENJANG TK,SD,SMP (NEGERI / SWASTA)
                         </p>
                         <h1 class="text-base md:text-sm font-black text-gray-800 leading-none tracking-tight uppercase">
                             KABUPATEN DONGGALA
@@ -268,13 +258,11 @@
                     </div>
                 </div>
             </div>
-
             <div class="hidden sm:flex items-center bg-gray-50 px-3 py-1 rounded-full border border-gray-200">
                 <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></span>
                 <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest">Sistem Informasi Geografis</span>
             </div>
         </header>
-
         <div id="map"></div>
     </main>
 </div>
@@ -289,7 +277,13 @@
     const gStreet = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '© Google Maps' });
     const esriSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: '© Esri Satellite' });
 
-    const map = L.map('map', { zoomControl: false, layers: [gHybrid] }).setView([-0.88675, 119.64992], 7,8);
+    // Koordinat awal Kabupaten Donggala
+    const initialView = { center: [-0.88675, 119.64992], zoom: 8 };
+
+    const map = L.map('map', { 
+        zoomControl: false, 
+        layers: [gHybrid] 
+    }).setView(initialView.center, initialView.zoom);
 
     const baseMaps = { "Google Hybrid": gHybrid, "Google Maps": gStreet, "Esri Imagery": esriSat };
     L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
@@ -351,29 +345,28 @@
                 const kec = (cols[3] || "DONGGALA").toUpperCase();
                 if(kec && kec !== "KECAMATAN") listKecamatan.add(kec);
 
-                // Hitung total siswa dari kolom 9 & 10 (Indeks 0)
                 const jmlSiswa = (parseInt(cols[9]) || 0) + (parseInt(cols[10]) || 0);
 
                 schoolData.push({
-    id: i, 
-    nama: cols[0], 
-    lat: parseFloat(cols[1]), 
-    long: parseFloat(cols[2]),
-    jenjang: jnj, 
-    fotoDrive: cols[4], 
-    npsn: cols[5], 
-    alamat: cols[6],
-    kecamatan: kec, 
-    kepsek: cols[8], 
-    operator: cols[15], // Menambahkan kolom Operator (Indeks 12)
-    Rombel: cols[12], // Menambahkan kolom Operator (Indeks 13)
-    Kurikulum: cols[16], // Menambahkan kolom Operator (Indeks 14)
-    status: (cols[14] || "SWASTA").toUpperCase(),
-    akreditasi: cols[13] || "-",
-    jmlGuru: cols[11] || "0",
-    jmlSiswa: jmlSiswa,
-    linkKemdikbud: cols[21] || "#",
-    linkWeb: cols[22] || "#"
+                    id: i, 
+                    nama: cols[0], 
+                    lat: parseFloat(cols[1]), 
+                    long: parseFloat(cols[2]),
+                    jenjang: jnj, 
+                    fotoDrive: cols[4], 
+                    npsn: cols[5], 
+                    alamat: cols[6],
+                    kecamatan: kec, 
+                    kepsek: cols[8], 
+                    operator: cols[15],
+                    Rombel: cols[12],
+                    Kurikulum: cols[16],
+                    status: (cols[14] || "SWASTA").toUpperCase(),
+                    akreditasi: cols[13] || "-",
+                    jmlGuru: cols[11] || "0",
+                    jmlSiswa: jmlSiswa,
+                    linkKemdikbud: cols[21] || "#",
+                    linkWeb: cols[22] || "#"
                 });
             }
         });
@@ -397,35 +390,22 @@
         let bounds = [];
 
         schoolData.forEach(d => {
-            if ((fStatus === 'ALL' || d.status === fStatus) && (fJenjang === 'ALL' || d.jenjang === fJenjang) && (fKecamatan === 'ALL' || d.kecamatan === fKecamatan)) {
+            if ((fStatus === 'ALL' || d.status === fStatus) && 
+                (fJenjang === 'ALL' || d.jenjang === fJenjang) && 
+                (fKecamatan === 'ALL' || d.kecamatan === fKecamatan)) {
                 
                 const photoLinks = d.fotoDrive ? d.fotoDrive.split(',') : [];
-let slidesHtml = photoLinks.map(link => {
-    let rawLink = link.trim();
-    let directLink = rawLink;
-
-    // Logika Konversi Google Drive
-    if (rawLink.includes('drive.google.com')) {
-        let fileId = "";
-        if (rawLink.includes('/d/')) {
-            fileId = rawLink.split('/d/')[1].split('/')[0];
-        } else if (rawLink.includes('id=')) {
-            fileId = rawLink.split('id=')[1].split('&')[0];
-        }
-        
-        if (fileId) {
-            // Menggunakan thumbnail berkualitas tinggi agar loading lebih ringan namun tajam
-            directLink = `https://lh3.googleusercontent.com/u/0/d/${fileId}=w800-h600-iv1`;
-        }
-    }
-
-    return `
-    <li class="splide__slide">
-        <a href="${directLink}" data-fancybox="gallery-${d.id}">
-            <img src="${directLink}" onerror="this.src='https://via.placeholder.com/280x160?text=Gambar+Privat/Error'">
-        </a>
-    </li>`;
-}).join('');
+                let slidesHtml = photoLinks.map(link => {
+                    let rawLink = link.trim();
+                    let directLink = rawLink;
+                    if (rawLink.includes('drive.google.com')) {
+                        let fileId = "";
+                        if (rawLink.includes('/d/')) fileId = rawLink.split('/d/')[1].split('/')[0];
+                        else if (rawLink.includes('id=')) fileId = rawLink.split('id=')[1].split('&')[0];
+                        if (fileId) directLink = `https://lh3.googleusercontent.com/u/0/d/${fileId}=w800-h600-iv1`;
+                    }
+                    return `<li class="splide__slide"><a href="${directLink}" data-fancybox="gallery-${d.id}"><img src="${directLink}" onerror="this.src='https://via.placeholder.com/280x160?text=Gambar+Error'"></a></li>`;
+                }).join('');
                 
                 if (!slidesHtml) slidesHtml = `<li class="splide__slide"><img src="https://via.placeholder.com/280x160?text=Tidak+Ada+Foto"></li>`;
 
@@ -452,15 +432,14 @@ let slidesHtml = photoLinks.map(link => {
                             </div>
                         </div>
                         <p><strong>Kepsek:</strong> ${d.kepsek || '-'}</p>
-                        <p><strong>Operator:</strong> ${d.operator || '-'}</p> <p style="color:#666; margin-top:4px; line-height:1.2;">
-                        <p><strong>Rombel:</strong> ${d.Rombel || '-'}</p> <p style="color:#666; margin-top:4px; line-height:1.2;">
-                        <p><strong>Kurikulum:</strong> ${d.Kurikulum || '-'}</p> <p style="color:#666; margin-top:4px; line-height:1.2;">
+                        <p><strong>Operator:</strong> ${d.operator || '-'}</p>
+                        <p><strong>Rombel:</strong> ${d.Rombel || '-'}</p>
+                        <p><strong>Kurikulum:</strong> ${d.Kurikulum || '-'}</p>
                         <p style="color:#666; margin-top:4px; line-height:1.2;">
                             <span class="material-icons" style="font-size:11px; vertical-align:middle">place</span> ${d.alamat}
                         </p>
                         <div style="display:flex; gap:4px; margin-top:12px;">
                             <a href="${d.linkKemdikbud}" target="_blank" class="btn-lte">DATA REFERENSI</a>
-                            <a href="https://guru.kemendikdasmen.go.id/" target="_blank" class="btn-lte">RUANG GURU</a> 
                             <a href="${d.linkWeb}" target="_blank" class="btn-lte">WEB</a> 
                         </div>
                     </div>
@@ -479,8 +458,15 @@ let slidesHtml = photoLinks.map(link => {
             }
         });
 
-        if (bounds.length > 0 && (fStatus !== 'ALL' || fJenjang !== 'ALL' || fKecamatan !== 'ALL')) {
-            map.flyToBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+        // LOGIKA BARU: Reset view jika SEMUA filter adalah 'ALL'
+        if (bounds.length > 0) {
+            if (fStatus === 'ALL' && fJenjang === 'ALL' && fKecamatan === 'ALL') {
+                // Kembali ke tampilan utama Kabupaten Donggala secara smooth
+                map.flyTo(initialView.center, initialView.zoom, { duration: 1.5 });
+            } else {
+                // Fokus ke area hasil filter
+                map.flyToBounds(bounds, { padding: [50, 50], maxZoom: 15, duration: 1.5 });
+            }
         }
     }
 
