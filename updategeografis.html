@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pemutakhiran Data Geografis Sekolah - Donggala</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4 md:p-8">
+    <div class="max-w-xl w-full glass-morphism p-6 md:p-8 rounded-2xl shadow-2xl border border-white">
+        <div class="flex flex-col items-center mb-8 text-center">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e5/Lambang_Kabupaten_Donggala_%282015-sekarang%29.png" 
+                 alt="Logo Kabupaten Donggala" 
+                 class="h-24 w-auto mb-4 drop-shadow-md">
+            <h1 class="text-base md:text-lg font-bold text-slate-800 uppercase tracking-tight">
+    Pemutakhiran Data Geografis Sekolah
+</h1>
+            <div class="h-1 w-20 bg-blue-600 mt-2 rounded-full"></div>
+            <p class="text-sm text-slate-500 mt-4 italic">Lengkapi data sekolah untuk akurasi informasi geografis kabupaten.</p>
+        </div>
+        
+        <form id="schoolForm" class="space-y-5">
+            <div class="group">
+                <label class="block text-sm font-semibold text-slate-700 mb-1 group-focus-within:text-blue-600 transition-colors">Pilih Nama Sekolah:</label>
+                <select id="namaSekolah" class="w-full border-2 border-slate-200 p-3 rounded-xl bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all appearance-none cursor-pointer text-slate-700" required>
+                    <option value="">-- Memuat daftar sekolah... --</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Kepala Sekolah</label>
+                    <input type="text" id="kepsek" placeholder="Nama Lengkap & Gelar" class="w-full border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1 text-blue-600">Siswa (L)</label>
+                    <input type="number" id="laki" placeholder="0" class="w-full border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1 text-pink-600">Siswa (P)</label>
+                    <input type="number" id="perempuan" placeholder="0" class="w-full border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Jumlah Guru</label>
+                    <input type="number" id="guru" placeholder="Total Guru" class="w-full border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Rombel</label>
+                    <input type="text" id="rombel" placeholder="Jml Rombongan Belajar" class="w-full border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all">
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Akreditasi</label>
+                    <select id="akreditasi" class="w-full border-2 border-slate-200 p-3 rounded-xl bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all cursor-pointer">
+                        <option value="">-- Pilih Akreditasi --</option>
+                        <option value="A">Terakreditasi A</option>
+                        <option value="B">Terakreditasi B</option>
+                        <option value="C">Terakreditasi C</option>
+                        <option value="Belum Akreditasi">Belum Akreditasi</option>
+                    </select>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Operator Sekolah</label>
+                    <input type="text" id="operator" placeholder="Nama Operator Dapodik" class="w-full border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Kurikulum</label>
+                    <input type="text" id="kurikulum" placeholder="K-13 / Merdeka" class="w-full border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1 text-green-600">Perpustakaan</label>
+                    <input type="text" id="perpus" placeholder="Ada / Tidak Ada" class="w-full border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all">
+                </div>
+            </div>
+            
+            <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white p-4 rounded-xl font-bold text-lg hover:bg-blue-700 shadow-lg hover:shadow-blue-200 active:scale-[0.98] transition-all duration-200 mt-4 flex items-center justify-center gap-2">
+                <span>Simpan Perubahan</span>
+            </button>
+        </form>
+
+        <div id="response" class="mt-6 p-3 rounded-lg text-center text-sm font-semibold hidden transition-all"></div>
+        
+        <footer class="mt-8 text-center text-slate-400 text-[10px] uppercase tracking-widest leading-relaxed">
+            Dinas Pendidikan Pemuda dan Olahraga<br>Kabupaten Donggala &copy; 2026
+        </footer>
+    </div>
+
+    <script>
+        // MASUKKAN URL WEB APP ANDA DI SINI
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxA6ppeoNmF2fckmcE6J9wvSueQdxKvG_bsx5opZA9zB0_IF-1bmebByAbmntjdJNxJ/exec';
+
+        window.onload = function() {
+            fetch(scriptURL)
+            .then(res => res.json())
+            .then(data => {
+                const dropdown = document.getElementById('namaSekolah');
+                dropdown.innerHTML = '<option value="">-- Pilih Sekolah --</option>';
+                data.forEach(nama => {
+                    const opt = document.createElement('option');
+                    opt.value = nama;
+                    opt.innerHTML = nama;
+                    dropdown.appendChild(opt);
+                });
+            })
+            .catch(err => {
+                document.getElementById('namaSekolah').innerHTML = '<option value="">Gagal memuat daftar sekolah</option>';
+            });
+        };
+
+        document.getElementById('schoolForm').addEventListener('submit', e => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const resDiv = document.getElementById('response');
+            
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Memproses...`;
+
+            const formData = {
+                namaSekolah: document.getElementById('namaSekolah').value,
+                kepsek: document.getElementById('kepsek').value,
+                laki: document.getElementById('laki').value,
+                perempuan: document.getElementById('perempuan').value,
+                guru: document.getElementById('guru').value,
+                rombel: document.getElementById('rombel').value,
+                akreditasi: document.getElementById('akreditasi').value,
+                operator: document.getElementById('operator').value,
+                kurikulum: document.getElementById('kurikulum').value,
+                perpus: document.getElementById('perpus').value
+            };
+
+            fetch(scriptURL, { method: 'POST', body: JSON.stringify(formData) })
+            .then(res => res.text())
+            .then(text => {
+                resDiv.classList.remove('hidden');
+                resDiv.innerText = text;
+                resDiv.className = "mt-6 p-3 rounded-lg text-center text-sm font-bold shadow-inner " + 
+                                  (text.includes("Berhasil") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700");
+                
+                btn.disabled = false;
+                btn.innerHTML = "Simpan Perubahan";
+                
+                if(text.includes("Berhasil")) {
+                    setTimeout(() => {
+                        location.reload(); 
+                    }, 2000);
+                }
+            })
+            .catch(err => {
+                resDiv.classList.remove('hidden');
+                resDiv.innerText = "Terjadi kesalahan koneksi.";
+                resDiv.className = "mt-6 p-3 rounded-lg text-center text-sm font-bold bg-red-100 text-red-700";
+                btn.disabled = false;
+                btn.innerHTML = "Simpan Perubahan";
+            });
+        });
+    </script>
+</body>
+</html>
